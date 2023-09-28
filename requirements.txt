@@ -1,0 +1,14 @@
+openai
+SpeechRecognition
+google-cloud-texttospeech
+playsound
+python-dotenv
+dlib
+keras-facenet
+scipy
+annoy
+google-cloud-speech
+psycopg2-binary
+tensorflow
+numpy
+pyaudio
