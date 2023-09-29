@@ -9,7 +9,7 @@ class FacialRecognition:
     def recognize_face(self):
         image, boundries = self.get_user_image() # Returns an image of the user and the boundries that contain their face
         detections = self.embedder.extract(image, threshold=0.95) # Model creates an embedding from the image along with some facial features
-        return detections[0]['embedding'] # Return just the embedding
+        return detections[0]['embedding'].tolist() # Return just the embedding as a list
 
     def get_user_image(self):
         face_detected = False

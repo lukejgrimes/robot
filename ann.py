@@ -9,20 +9,25 @@ class ANN:
         self.annoy = self.create_index() # Either create a new index or load saved index
         self.db = FaceDatabase() # Initalize DB object
 
-    def add_item_to_index(self, embedding):
-        len_of_data = self.annoy.get_n_items() # Length of the annoy index
-        self.annoy.add_item(len_of_data, embedding) # Add embedding to the end of the annoy index
-        self.annoy.build(100) # Rebuild the index with new embedding
-        self.annoy.save("index.ann") # Save the new index to the file
+    def update_index(self, new_embeddings):
+        # Add new embeddings to the index and rebuild
+        self.annoy.unload() # Unload index
+        annoy = AnnoyIndex(512, 'euclidean') # Create new annoy index
+        # Get all saved embeddings from the db and add new embeddings
+        all_embeddings = self.db.get_all_embeddings() + new_embeddings 
+        for i in range(len(all_embeddings)):
+            annoy.add_item(i, all_embeddings[i])
+        # Rebuild and save 
+        annoy.build(100)
+        annoy.save(os.getenv('ANNOY_INDEX'))
+
+        self.annoy = annoy
 
     def create_index(self):
+        annoy = AnnoyIndex(512, 'euclidean') # Initalize ANNOY with vector size of 512, use euclidean distance
         # Check if an index has already been created
         if os.path.exists(os.getenv('ANNOY_INDEX')):
-            annoy = AnnoyIndex(512, 'euclidean') # Initalize ANNOY with vector size of 512, use euclidean distance
             annoy.load(os.getenv('ANNOY_INDEX')) # Load the previous index
-        else:
-            annoy = AnnoyIndex(512, 'euclidean') # Initalize ANNOY with vector size of 512, use euclidean distance
-        
         return annoy
 
     def search_face(self, embedding):
@@ -35,8 +40,8 @@ class ANN:
         vector_id = nearest_vectors[0]
         distance = distances[0]
         nearest_face = self.annoy.get_item_vector(vector_id) # Find the nearest face's embedding
-    
-        if distance <= .2:
+        print(f"Nearest Neighbor Distance: {distance}")
+        if distance <= .7:
              # If distance is within threshold find the user's information in the database
             name, user_id = self.db.find_embedding_in_db(nearest_face)
             return name, user_id

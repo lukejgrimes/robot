@@ -61,7 +61,7 @@ class Chat:
             messages.append({"role": "user", "content": user_message})
             print(f"User: {user_message}")
             # If user decides to quit, return the full conversation
-            if user_message.lower() == "quit.":
+            if user_message.lower() == "quit":
                 return messages
 
     def speak(self, message):
@@ -116,7 +116,7 @@ class Chat:
         # Create a user summary based on conversation
         response = openai.ChatCompletion.create(
             model = "gpt-3.5-turbo-0613",
-            messages = [{"role": "system", "content": f"Create a summary of the user based on the following conversation: {conversation}"}]
+            messages = [{"role": "system", "content": f"Create a summary of the user's personality, interests, and any important information given based on the following conversation: {conversation}"}]
         )
 
         summary = response['choices'][0]['message']['content']
@@ -129,8 +129,10 @@ class Chat:
 
         response = openai.ChatCompletion.create(
             model = "gpt-3.5-turbo-0613",
-            message = [{"role": "system", "content": f"Locate the name in the following text: {name}. Print just the name you have found."}]
+            messages = [{"role": "system", "content": f"Either print the given name back to the user or locate and isolate the name\
+                          from the following user response: {name}. Print just the name you have found. If you recieve only a name, print the name."}]
         )
 
         name = response['choices'][0]['message']['content']
+        print(name)
         return name

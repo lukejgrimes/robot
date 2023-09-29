@@ -1,5 +1,6 @@
 import numpy as np
 import psycopg2
+import json
 
 class FaceDatabase:
     def __init__(self):
@@ -29,7 +30,7 @@ class FaceDatabase:
     def add_new_conversation(self, user_id, conversation):
         # Insert a new conversation into the database
         query = f"INSERT INTO conversations (user_id, conversation) VALUES(%s, %s)"
-        self.cursor.execute(query, (user_id, conversation))
+        self.cursor.execute(query, (user_id, json.dumps(conversation)))
         self.conn.commit()
 
     def update_user_summary(self, user_id, summary):
@@ -40,7 +41,7 @@ class FaceDatabase:
 
     def find_embedding_in_db(self, embedding):
         # Get the matching embedding in the db and return the corresponding name and user id
-        query = f"SELECT user_id FROM faces WHERE embedding = %s"
+        query = f"SELECT user_id FROM faces WHERE embedding = %s::double precision[]"
         self.cursor.execute(query, (embedding,))
         user_id = self.cursor.fetchone()
         query = f"SELECT name FROM users WHERE id = %s"
@@ -48,8 +49,16 @@ class FaceDatabase:
         name = self.cursor.fetchone()
         self.conn.commit()
         return name, user_id
+    
+    def get_all_embeddings(self):
+        # Get every embedding from the db
+        query = "SELECT embedding FROM faces"
+        self.cursor.execute(query)
+        all_embeddings = self.cursor.fetchall()
+        all_embeddings = [embedding[0] for embedding in all_embeddings]
+        return all_embeddings
 
     def close_connection(self):
         # Close DB connection
         self.cursor.close()
-        self.conn.close()   
+        self.conn.close()
